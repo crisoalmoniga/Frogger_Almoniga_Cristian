@@ -1,60 +1,108 @@
 #include <iostream>
-#include <ctime>
-#include <conio2.h>
 #include <windows.h>
 
 using namespace std;
 
+// Definimos una función para establecer la posición del cursor en la consola
+void gotoxy(int x, int y) {
+	COORD coord;
+	coord.X = x;
+	coord.Y = y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
+}
 
-class Ranita {
+class Plataforma {
 public:
-	int x, y; // Posición de la ranita en la pantalla
+	int x, y; // Posición de la plataforma en la pantalla
+	int width, height; // Tamaño de la plataforma
 	
-	Ranita(int startX, int startY) : x(startX), y(startY) {}
+	Plataforma(int startX, int startY, int w, int h) : x(startX), y(startY), width(w), height(h) {}
 	
-	void saltarArriba() {
-		// Implementa el salto hacia arriba
+	void dibujar() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				gotoxy(x + j, y + i);
+				cout << "#"; // Carácter de "encendido"
+			}
+		}
 	}
 	
-	void saltarDerecha() {
-		// Implementa el salto hacia la derecha
+	void apagar() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				gotoxy(x + j, y + i);
+				cout << " "; // Carácter de "apagado"
+			}
+		}
 	}
 	
-	void saltarIzquierda() {
-		// Implementa el salto hacia la izquierda
+	void mover(int direction) {
+		x += direction;
 	}
 };
 
-class Hoja {
+class PlataformaFija {
 public:
-	int x, y; // Posición de la hoja en la pantalla
+	int x, y; // Posición de la plataforma en la pantalla
+	int width, height; // Tamaño de la plataforma
 	
-	Hoja(int startX, int startY) : x(startX), y(startY) {}
-	
-	void moverDerecha() {
-		// Implementa el movimiento de la hoja hacia la derecha
-	}
-};
-
-class Contador {
-public:
-	time_t startTime;
-	int duration; // Duración del contador en segundos
-	
-	Contador(int seconds) : duration(seconds) {
-		startTime = time(nullptr);
+	PlataformaFija(int startX, int w, int h) : x(startX), width(w), height(h) {
+		// Calcula la posición vertical en la parte inferior de la pantalla
+		y = 27 - h;
 	}
 	
-	bool tiempoAgotado() {
-		time_t currentTime = time(nullptr);
-		return (int)difftime(currentTime, startTime) >= duration;
+	void dibujar() {
+		for (int i = 0; i < height; i++) {
+			for (int j = 0; j < width; j++) {
+				gotoxy(x + j, y + i);
+				cout << "#"; // Carácter de "encendido"
+			}
+		}
 	}
 };
 
 
+int main() {
+	// Crea dos plataformas móvil
+	Plataforma plataforma1(10, 10, 10, 5);
+	Plataforma plataforma2(50, 15, 10, 5);
+	
+	int plataforma1Direction = 1; // Dirección de movimiento de plataforma1
+	int plataforma2Direction = -1; // Dirección de movimiento de plataforma2
 
-int main(int argc, char *argv[]) {
+	// Crea una plataforma fija en la parte inferior
+	PlataformaFija plataformaInferior(00, 80, 4);
+	
+	
+	// Loop principal
+	while (true) {
+		// Apaga las plataformas en sus posiciones anteriores
+		plataforma1.apagar();
+		plataforma2.apagar();
+		
+		// Mueve las plataformas
+		plataforma1.mover(plataforma1Direction);
+		plataforma2.mover(plataforma2Direction);
+		
+		// Dibuja las plataformas en sus nuevas posiciones
+		plataforma1.dibujar();
+		plataforma2.dibujar();
+	
+		// Dibuja la plataforma fija en la parte inferior
+		plataformaInferior.dibujar();
+		
+		// Espera un breve período de tiempo para una animación suave
+		Sleep(100);
+		
+		// Revisa los bordes y cambia la dirección si es necesario
+		if (plataforma1.x <= 0 || plataforma1.x + plataforma1.width >= 80) {
+			plataforma1Direction *= -1;
+		}
+		
+		if (plataforma2.x <= 0 || plataforma2.x + plataforma2.width >= 80) {
+			plataforma2Direction *= -1;
+		}
+	}
 	
 	return 0;
 }
-
