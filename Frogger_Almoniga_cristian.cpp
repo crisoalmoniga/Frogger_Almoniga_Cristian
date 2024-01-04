@@ -1,108 +1,159 @@
 #include <iostream>
+#include <conio2.h>
 #include <windows.h>
+#include <ctime>
 
 using namespace std;
 
-// Definimos una función para establecer la posición del cursor en la consola
-void gotoxy(int x, int y) {
-	COORD coord;
-	coord.X = x;
-	coord.Y = y;
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-}
-
-class Plataforma {
+class ObjetoBase {
 public:
-	int x, y; // Posición de la plataforma en la pantalla
-	int width, height; // Tamaño de la plataforma
+	int x;
+	int y;
+	char imagen;
+	int color;
 	
-	Plataforma(int startX, int startY, int w, int h) : x(startX), y(startY), width(w), height(h) {}
+public:
+	ObjetoBase(int _x, int _y, char _imagen, int _color)
+		: x(_x), y(_y), imagen(_imagen), color(_color) {}
 	
-	void dibujar() {
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				gotoxy(x + j, y + i);
-				cout << "#"; // Carácter de "encendido"
-			}
-		}
+	virtual void dibujar() {
+		textcolor(color);
+		putchxy(x, y, imagen);
 	}
 	
-	void apagar() {
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				gotoxy(x + j, y + i);
-				cout << " "; // Carácter de "apagado"
-			}
-		}
-	}
-	
-	void mover(int direction) {
-		x += direction;
+	virtual void borrar() {
+		textcolor(color);
+		putchxy(x, y, ' ');
 	}
 };
 
-class PlataformaFija {
+class Rana : public ObjetoBase {
 public:
-	int x, y; // Posición de la plataforma en la pantalla
-	int width, height; // Tamaño de la plataforma
+	Rana(int _x, int _y) : ObjetoBase(_x, _y, '#', 10) {}
 	
-	PlataformaFija(int startX, int w, int h) : x(startX), width(w), height(h) {
-		// Calcula la posición vertical en la parte inferior de la pantalla
-		y = 27 - h;
-	}
-	
-	void dibujar() {
-		for (int i = 0; i < height; i++) {
-			for (int j = 0; j < width; j++) {
-				gotoxy(x + j, y + i);
-				cout << "#"; // Carácter de "encendido"
-			}
-		}
+	void mover(int dx, int dy) {
+		borrar();
+		x += dx;
+		y += dy;
+		dibujar();
 	}
 };
 
+class Obstaculo : public ObjetoBase {
+private:
+	static const int ancho = 5;
+	static const int alto = 5;
+	char Matriz[ancho][alto];
+	int colorMatriz[ancho][alto];
+	
+public:
+	Obstaculo(int _x, int _y) : ObjetoBase(_x, _y, '#', 10) { // Cambié el color a verde (10)
+		// Inicializar la matriz de caracteres y colores
+		for (int i = 0; i < ancho; i++) {
+			for (int j = 0; j < alto; j++) {
+				Matriz[i][j] = '#';
+				colorMatriz[i][j] = 12; // Cambié el color a verde (10)
+			}
+		}
+	}
+	
+	virtual void dibujar() override {
+		for (int i = 0; i < ancho; i++) {
+			for (int j = 0; j < alto; j++) {
+				textcolor(colorMatriz[i][j]);
+				putchxy(x + i, y + j, Matriz[i][j]);
+			}
+		}
+	}
+	
+	void mover() {
+		borrarAnterior(); // Borra el obstáculo anterior
+		x--; // Mueve el obstáculo
+		dibujar(); // Dibuja el obstáculo en su nueva posición
+	}
+	
+private:
+		void borrarAnterior() {
+			for (int i = 0; i < ancho; i++) {
+				for (int j = 0; j < alto; j++) {
+					textcolor(colorMatriz[i][j]);
+					putchxy(x + i, y + j, ' '); // Borra el caracter anterior
+				}
+			}
+		}
+};
+
+class Juego {
+private:
+	Rana rana;
+	Obstaculo obstaculos[2];
+	int puntaje;
+	
+public:
+	Juego() : rana(10, 10), obstaculos{{15, 5}, {10, 15}}, puntaje(0) {}
+	
+	void iniciarJuego() {
+		clrscr();
+		mostrarTeclas();
+		
+		while (true) {
+			if (kbhit()) {
+				int tecla = getch();
+				procesarTecla(tecla);
+			}
+			
+			rana.dibujar();
+			moverObstaculos();
+			actualizarPuntaje();
+			Sleep(100);
+		}
+	}
+	
+private:
+		void mostrarTeclas() {
+			textcolor(14);
+			gotoxy(2, 2);
+			cout << "Teclas: W - Arriba, A - Izquierda, S - Abajo, D - Derecha";
+		}
+		
+		void procesarTecla(int tecla) {
+			switch (tecla) {
+			case 'w':
+				rana.mover(0, -1);
+				break;
+			case 'a':
+				rana.mover(-1, 0);
+				break;
+			case 's':
+				rana.mover(0, 1);
+				break;
+			case 'd':
+				rana.mover(1, 0);
+				break;
+			}
+		}
+		
+		void moverObstaculos() {
+			for (int i = 0; i < 2; i++) {
+				obstaculos[i].mover();
+				if (obstaculos[i].x == 0) {
+					obstaculos[i].x = 79;
+					puntaje++;
+				}
+			}
+		}
+		
+		void actualizarPuntaje() {
+			textcolor(15);
+			gotoxy(2, 1);
+			cout << "Puntaje: " << puntaje;
+		}
+};
 
 int main() {
-	// Crea dos plataformas móvil
-	Plataforma plataforma1(10, 10, 10, 5);
-	Plataforma plataforma2(50, 15, 10, 5);
-	
-	int plataforma1Direction = 1; // Dirección de movimiento de plataforma1
-	int plataforma2Direction = -1; // Dirección de movimiento de plataforma2
-
-	// Crea una plataforma fija en la parte inferior
-	PlataformaFija plataformaInferior(00, 80, 4);
-	
-	
-	// Loop principal
-	while (true) {
-		// Apaga las plataformas en sus posiciones anteriores
-		plataforma1.apagar();
-		plataforma2.apagar();
-		
-		// Mueve las plataformas
-		plataforma1.mover(plataforma1Direction);
-		plataforma2.mover(plataforma2Direction);
-		
-		// Dibuja las plataformas en sus nuevas posiciones
-		plataforma1.dibujar();
-		plataforma2.dibujar();
-	
-		// Dibuja la plataforma fija en la parte inferior
-		plataformaInferior.dibujar();
-		
-		// Espera un breve período de tiempo para una animación suave
-		Sleep(100);
-		
-		// Revisa los bordes y cambia la dirección si es necesario
-		if (plataforma1.x <= 0 || plataforma1.x + plataforma1.width >= 80) {
-			plataforma1Direction *= -1;
-		}
-		
-		if (plataforma2.x <= 0 || plataforma2.x + plataforma2.width >= 80) {
-			plataforma2Direction *= -1;
-		}
-	}
-	
+	srand(time(NULL));
+	_setcursortype(_NOCURSOR);
+	Juego juego;
+	juego.iniciarJuego();
 	return 0;
 }
