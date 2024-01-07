@@ -3,6 +3,11 @@
 #include <conio.h>
 using namespace std;
 
+const int limiteIzquierdo = 0;
+const int limiteDerecho = 1023;
+const int limiteSuperior = 0;
+const int limiteInferior = 767;
+
 // Función para posicionar el cursor en la consola
 void irAxy(int x, int y) {
 	HANDLE hCon;
@@ -37,9 +42,9 @@ void dibujarRana(int x, int y) {
 
 int main() {
 	// Establece las coordenadas iniciales para la rana
-	int x = 10, y = 5;
+	int x = 55,y = 27;
 	
-	// Ajusta la velocidad del movimiento lateral
+	// Ajusta la velocidad del movimiento
 	int velocidadDesplazamiento = 3; // Puedes cambiar este valor según tu preferencia
 	
 	bool game_over = false;
@@ -56,10 +61,10 @@ int main() {
 			printf("         ");  // Cuerpo inferior de la rana
 			
 			// Actualiza las coordenadas según la tecla presionada
-			if (tecla == 'd') x+= velocidadDesplazamiento;
-			if (tecla == 'a') x-= velocidadDesplazamiento;
-			if (tecla == 'w') y-= velocidadDesplazamiento;
-			if (tecla == 's') y+= velocidadDesplazamiento;
+			if (tecla == 'd' && x + velocidadDesplazamiento <= limiteDerecho) x += velocidadDesplazamiento;
+			if (tecla == 'a' && x - velocidadDesplazamiento >= limiteIzquierdo) x -= velocidadDesplazamiento;
+			if (tecla == 'w' && y - velocidadDesplazamiento >= limiteSuperior) y -= velocidadDesplazamiento;
+			if (tecla == 's' && y + velocidadDesplazamiento <= limiteInferior) y += velocidadDesplazamiento;
 		}
 		
 		// Dibuja la rana en las nuevas coordenadas
