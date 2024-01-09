@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <conio.h>
+#include <conio2.h>
 
 #define ARRIBA 72
 #define IZQUIERDA 75
@@ -27,7 +28,31 @@ void OcultarCursor() {
 	cci.bVisible = FALSE;
 	
 	SetConsoleCursorInfo(hCon, &cci);
+}
+
+void pintar_limites() {
+	for (int i = 2; i < 120; i++) {
+		gotoxy(i, 3);
+		printf("%c", 205);
+		gotoxy(i, 30);
+		printf("%c", 205);
+	}
 	
+	for (int i = 4; i < 30; i++) {
+		gotoxy(1, i);
+		printf("%c", 186);
+		gotoxy(120, i);
+		printf("%c", 186);
+	}
+	
+	gotoxy(1, 3);
+	printf("%c", 201);
+	gotoxy(1, 30);
+	printf("%c", 200);
+	gotoxy(120, 1);
+	printf("%c", 187);
+	gotoxy(120, 30);
+	printf("%c", 188);
 }
 
 // Función para establecer el color del texto en la consola
@@ -43,9 +68,9 @@ void dibujarRana(int x, int y) {
 	
 	irAxy(x, y);
 	printf("   \\_/");  // Cuerpo superior de la rana
-	irAxy(x, y + 1);
-	printf("  (o o)");  // Ojos de la rana
 	irAxy(x, y + 2);
+	printf("  (o o)");  // Ojos de la rana
+	irAxy(x, y + 3);
 	printf(" /  V  \\");  // Cuerpo inferior de la rana
 	
 	// Restaura el color original de la consola
@@ -64,16 +89,18 @@ public:
 	void reiniciarPosicion();
 };
 
-AUTO::AUTO(int _x, int _y, int _direccion) : x(_x), y(_y), direccion(_direccion) {}void AUTO::pintar() {
+AUTO::AUTO(int _x, int _y, int _direccion) : x(_x), y(_y), direccion(_direccion) {}
+
+void AUTO::pintar() {
 	irAxy(x, y);
 	printf("%c%c%c%c%c", 219, 219, 219, 219, 219); // Cuadrado grande
-
 }
 
 void AUTO::borrar() {
 	irAxy(x, y);
 	printf("                                                                                    "); // Espacios para borrar el cuadrado grande
 }
+
 void AUTO::mover() {
 	borrar();
 	
@@ -99,17 +126,17 @@ void AUTO::reiniciarPosicion() {
 }
 
 int main() {
-	
 	OcultarCursor();
 	// Establece las coordenadas iniciales para la rana
 	int xRana = 55, yRana = 27;
+	pintar_limites();
 	
 	// Establece las coordenadas iniciales y direcciones para los autos
 	AUTO autoIzquierda(2, 10, 1);  // Dirección: Izquierda
 	AUTO autoDerecha(80, 18, 2);    // Dirección: Derecha
 	
 	// Ajusta la velocidad del movimiento
-	int velocidadDesplazamiento = 5; // Puedes cambiar este valor según tu preferencia
+	int velocidadDesplazamiento = 2; // Puedes cambiar este valor según tu preferencia
 	
 	bool game_over = false;
 	while (!game_over) {
@@ -119,16 +146,16 @@ int main() {
 			// Borra la rana en la posición anterior
 			irAxy(xRana, yRana);
 			printf("       ");  // Cuerpo superior de la rana
-			irAxy(xRana, yRana + 1);
-			printf("       ");  // Ojos de la rana
 			irAxy(xRana, yRana + 2);
+			printf("       ");  // Ojos de la rana
+			irAxy(xRana, yRana + 3);
 			printf("         ");  // Cuerpo inferior de la rana
 			
 			// Actualiza las coordenadas según la tecla presionada
-			if (tecla == DERECHA) xRana += velocidadDesplazamiento;
-			if (tecla == IZQUIERDA) xRana -= velocidadDesplazamiento;
-			if (tecla == ARRIBA) yRana -= velocidadDesplazamiento;
-			if (tecla == ABAJO) yRana += velocidadDesplazamiento;
+			if (tecla == DERECHA && xRana + 1 > 18) xRana += velocidadDesplazamiento;
+			if (tecla == IZQUIERDA && xRana > 1) xRana -= velocidadDesplazamiento;
+			if (tecla == ARRIBA && yRana > 4) yRana -= velocidadDesplazamiento;
+			if (tecla == ABAJO && yRana + 2 < 23) yRana += velocidadDesplazamiento;
 		}
 		
 		// Mueve los autos
