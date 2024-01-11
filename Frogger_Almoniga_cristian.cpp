@@ -2,6 +2,7 @@
 #include <windows.h>
 #include <conio.h>
 #include <conio2.h>
+#include <iostream>
 
 #define ARRIBA 72
 #define IZQUIERDA 75
@@ -66,16 +67,23 @@ void setColorTexto(int color) {
 // Clase Rana
 class Rana {
 	int x, y;
+	int vida;
 	
 public:
-	Rana(int _x, int _y);
+	Rana(int _x, int _y, int _vida);
+	int getX(){return x;}
+	int getY(){return y;}
+	int getVida(){return vida;}
+	
 	void dibujar();
 	void borrar();
 	void mover(int direccion);
 	void pintar_corazones();
+	void golpeada();
+
 };
 
-Rana::Rana(int _x, int _y) : x(_x), y(_y) {}
+Rana::Rana(int _x, int _y, int _vida) : x(_x), y(_y), vida(_vida) {}
 
 void Rana::dibujar() {
 	// Establece el color de fondo a verde y el color del texto a negro
@@ -140,6 +148,12 @@ void Rana::pintar_corazones() {
 	}
 }
 
+void Rana::golpeada(){
+	vida--;
+	printf("golpeeeeeee");
+}
+
+
 // Clase Auto
 class Auto {
 	int x, y;
@@ -151,6 +165,7 @@ public:
 	void borrar();
 	void mover();
 	void reiniciarPosicion();
+	void colision(class Rana &r);
 };
 
 Auto::Auto(int _x, int _y, int _direccion) : x(_x), y(_y), direccion(_direccion) {}
@@ -189,19 +204,24 @@ void Auto::reiniciarPosicion() {
 	}
 }
 
+void Auto::colision(class Rana &r){
+	if (x > r.getX() && x < r.getX()+2 && y == r.getY()){
+		r.golpeada();
+		r.borrar();
+		gotoxy(2, 2);printf("vidas %d", r.getVida());
+	}
+}
+
 int main() {
 	OcultarCursor();
 	// Establece las coordenadas iniciales para la rana
-	Rana rana(55, 27);
+	Rana rana(55, 27, 10);
 	pintar_limites();
 	rana.pintar_corazones();
 	
 	// Establece las coordenadas iniciales y direcciones para los autos
 	Auto autoIzquierda(2, 10, 1);  // Dirección: Izquierda
 	Auto autoDerecha(80, 18, 2);    // Dirección: Derecha
-	
-	// Ajusta la velocidad del movimiento
-	int velocidadDesplazamiento = 3; // Puedes cambiar este valor según tu preferencia
 	
 	bool game_over = false;
 	while (!game_over) {
@@ -231,6 +251,10 @@ int main() {
 		// Mueve los autos
 		autoIzquierda.mover();
 		autoDerecha.mover();
+		
+		//
+		autoIzquierda.colision(rana);
+		autoDerecha.colision(rana);		
 		
 		// Reinicia la posición de los autos cuando alcanzan el borde de la pantalla
 		autoIzquierda.reiniciarPosicion();
