@@ -78,7 +78,6 @@ public:
 	void dibujar();
 	void borrar();
 	void mover(int direccion);
-	void pintar_corazones();
 	void golpeada();
 
 };
@@ -132,25 +131,11 @@ void Rana::mover(int direccion) {
 		break;
 	}
 	
-	pintar_corazones();
-	
 	dibujar();
-}
-
-void Rana::pintar_corazones() {
-	gotoxy(64, 2);
-	printf("Salud");
-	gotoxy(70, 2);
-	printf("     ");
-	for (int i = 0; i < corazones; i++) {
-		gotoxy(70 + i, 2);
-		printf("%c", 3);
-	}
 }
 
 void Rana::golpeada(){
 	vida--;
-	printf("golpeeeeeee");
 }
 
 
@@ -217,7 +202,6 @@ int main() {
 	// Establece las coordenadas iniciales para la rana
 	Rana rana(55, 27, 10);
 	pintar_limites();
-	rana.pintar_corazones();
 	
 	// Establece las coordenadas iniciales y direcciones para los autos
 	Auto autoIzquierda(2, 10, 1);  // Dirección: Izquierda
