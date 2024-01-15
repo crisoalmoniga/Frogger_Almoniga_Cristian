@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <windows.h>
 #include <conio.h>
-#include <conio2.h>
 #include <iostream>
 
 #define ARRIBA 72
@@ -10,8 +9,6 @@
 #define ABAJO 80
 
 using namespace std;
-
-int corazones = 3;  // Agrega esta variable global para contar los corazones
 
 // Función para posicionar el cursor en la consola
 void irAxy(int x, int y) {
@@ -35,26 +32,26 @@ void OcultarCursor() {
 
 void pintar_limites() {
 	for (int i = 2; i < 120; i++) {
-		gotoxy(i, 3);
+		irAxy(i, 3);
 		printf("%c", 205);
-		gotoxy(i, 30);
+		irAxy(i, 30);
 		printf("%c", 205);
 	}
 	
 	for (int i = 4; i < 30; i++) {
-		gotoxy(1, i);
+		irAxy(1, i);
 		printf("%c", 186);
-		gotoxy(120, i);
+		irAxy(120, i);
 		printf("%c", 186);
 	}
 	
-	gotoxy(1, 3);
+	irAxy(1, 3);
 	printf("%c", 201);
-	gotoxy(1, 30);
+	irAxy(1, 30);
 	printf("%c", 200);
-	gotoxy(120, 1);
+	irAxy(120, 1);
 	printf("%c", 187);
-	gotoxy(120, 30);
+	irAxy(120, 30);
 	printf("%c", 188);
 }
 
@@ -71,15 +68,14 @@ class Rana {
 	
 public:
 	Rana(int _x, int _y, int _vida);
-	int getX(){return x;}
-	int getY(){return y;}
-	int getVida(){return vida;}
+	int getX() { return x; }
+	int getY() { return y; }
+	int getVida() { return vida; }
 	
 	void dibujar();
 	void borrar();
 	void mover(int direccion);
 	void golpeada();
-
 };
 
 Rana::Rana(int _x, int _y, int _vida) : x(_x), y(_y), vida(_vida) {}
@@ -118,7 +114,7 @@ void Rana::mover(int direccion) {
 			x--;
 		break;
 	case DERECHA:
-		if (x + 1 > 18)
+		if (x + 1 < 118)
 			x++;
 		break;
 	case ARRIBA:
@@ -134,10 +130,9 @@ void Rana::mover(int direccion) {
 	dibujar();
 }
 
-void Rana::golpeada(){
+void Rana::golpeada() {
 	vida--;
 }
-
 
 // Clase Auto
 class Auto {
@@ -173,7 +168,7 @@ void Auto::mover() {
 		x--;
 	}
 	// Mover hacia la derecha
-	else if (direccion == 2 && x < 80) {
+	else if (direccion == 2 && x + 5 < 118) {
 		x++;
 	}
 	
@@ -183,73 +178,83 @@ void Auto::mover() {
 void Auto::reiniciarPosicion() {
 	// Reiniciar la posición cuando alcanza el borde de la pantalla
 	if (direccion == 1 && x <= 1) {
-		x = 80;
-	} else if (direccion == 2 && x >= 80) {
+		x = 118;
+	} else if (direccion == 2 && x + 5 >= 118) {
 		x = 1;
 	}
 }
 
-void Auto::colision(class Rana &r){
-	if (x > r.getX() && x < r.getX()+2 && y == r.getY()){
+void Auto::colision(class Rana &r) {
+	if (x + 5 > r.getY() && x < r.getY() + 2 && y == r.getY()) {
 		r.golpeada();
 		r.borrar();
-		gotoxy(2, 2);printf("vidas %d", r.getVida());
+		irAxy(2, 2);
+		printf("vidas %d", r.getVida());
+	}
+}
+
+// Clase Juego
+class Juego {
+	Rana rana;
+	Auto autoIzquierda;
+	Auto autoDerecha;
+	bool game_over;
+	
+public:
+	Juego();
+	void iniciarJuego();
+	void manejarTecla(char tecla);
+};
+
+Juego::Juego() : rana(55, 27, 10), autoIzquierda(2, 10, 1), autoDerecha(80, 18, 2), game_over(false) {}
+
+void Juego::iniciarJuego() {
+	OcultarCursor();
+	pintar_limites();
+	
+	while (!game_over) {
+		if (_kbhit()) {
+			char tecla = _getch();
+			manejarTecla(tecla);
+		}
+		
+		autoIzquierda.mover();
+		autoDerecha.mover();
+		
+		autoIzquierda.colision(rana);
+		autoDerecha.colision(rana);
+		
+		autoIzquierda.reiniciarPosicion();
+		autoDerecha.reiniciarPosicion();
+		
+		rana.dibujar();
+		
+		Sleep(30);
+	}
+}
+
+void Juego::manejarTecla(char tecla) {
+	rana.borrar();
+	
+	switch (tecla) {
+	case DERECHA:
+		rana.mover(DERECHA);
+		break;
+	case IZQUIERDA:
+		rana.mover(IZQUIERDA);
+		break;
+	case ARRIBA:
+		rana.mover(ARRIBA);
+		break;
+	case ABAJO:
+		rana.mover(ABAJO);
+		break;
 	}
 }
 
 int main() {
-	OcultarCursor();
-	// Establece las coordenadas iniciales para la rana
-	Rana rana(55, 27, 10);
-	pintar_limites();
-	
-	// Establece las coordenadas iniciales y direcciones para los autos
-	Auto autoIzquierda(2, 10, 1);  // Dirección: Izquierda
-	Auto autoDerecha(80, 18, 2);    // Dirección: Derecha
-	
-	bool game_over = false;
-	while (!game_over) {
-		if (_kbhit()) {
-			char tecla = _getch();
-			
-			// Borra la rana en la posición anterior
-			rana.borrar();
-			
-			// Actualiza las coordenadas según la tecla presionada
-			switch (tecla) {
-			case DERECHA:
-				rana.mover(DERECHA);
-				break;
-			case IZQUIERDA:
-				rana.mover(IZQUIERDA);
-				break;
-			case ARRIBA:
-				rana.mover(ARRIBA);
-				break;
-			case ABAJO:
-				rana.mover(ABAJO);
-				break;
-			}
-		}
-		
-		// Mueve los autos
-		autoIzquierda.mover();
-		autoDerecha.mover();
-		
-		//
-		autoIzquierda.colision(rana);
-		autoDerecha.colision(rana);		
-		
-		// Reinicia la posición de los autos cuando alcanzan el borde de la pantalla
-		autoIzquierda.reiniciarPosicion();
-		autoDerecha.reiniciarPosicion();
-		
-		// Dibuja la rana en las nuevas coordenadas
-		rana.dibujar();
-		
-		// Añade un pequeño retardo para que el usuario pueda ver el resultado y interactuar
-		Sleep(30);
-	}
+	Juego juego;
+	juego.iniciarJuego();
 	
 	return 0;
 }
